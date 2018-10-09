@@ -2,33 +2,45 @@
 namespace App\Tests;
 
 use App\Entity\User;
-use App\Factory\UserFactory;
-use PHPUnit\Framework\TestCase;
-use Doctrine\DBAL\Driver\Connection;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Validator\Validator\RecursiveValidator;
 
-class UserTest extends WebTestCase
+class UserTest extends KernelTestCase
 {
-    public function testUserFactory()
+    public function testToArray()
     {
-        $factory = new \App\Factory\UserFactory();
-        $user = $factory::createUser();
+        $user = new User();
+        $user->setName('Sean');
+        $user->setRole('admin');
 
-        $this->assertEquals(User::class, get_class($user));
+        $userArr = $user->toArray();
+        
+        $this->assertInternalType('array', $userArr);
     }
 
-    /* public function testFindById()
+   /*  public function testCreateValidUser()
     {
-        $conn = new Connection();
+        $user = new User();
+        $user->setName('Sean Loughrey');
+        $user->setRole('client');
 
-        $sql = 'INSERT INTO user (name, role) VALUES ("John Smith", "admin")';
-        $stmt = $conn->prepare($sql);
-        $stmt->execute();
-        $id = $conn->lastInsertId();
-        echo 'id is: ' . $id;
+        // Arrrgh... how does one get an entity annotation validator to work in a unit test :(
+        $validator = new RecursiveValidator();
+        $errors = $validator->validate($user);
+        
+        $this->assertEmpty($errors);
+    }
 
-        // returns an array of arrays (i.e. a raw data set)
-        $results = $stmt->fetchAll();
+    public function testCreateInvalidUser()
+    {
+        $user = new User();
+        $user->setName('Sean Loughrey');
+        $user->setRole('clientttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt'); // 103 chars max is 100
 
+        // Arrrgh... how does one get an entity annotation validator to work in a unit test :(
+        $validator = new RecursiveValidator();
+        $errors = $validator->validate($user);
+        
+        $this->assertNotEmpty($errors);
     } */
 }
