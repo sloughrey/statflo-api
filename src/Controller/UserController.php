@@ -21,6 +21,7 @@ class UserController extends AbstractController
      * Finds users based on the given property filters (strict searching)
      *
      * @Route("/users", methods={"GET"}, name="find_users")
+     * @param UserRepository $repository
      * @return JsonResponse
      */
     public function find(UserRepository $repository): JsonResponse
@@ -51,6 +52,8 @@ class UserController extends AbstractController
      * Creates a new user and persists it to the db
      *
      * @Route("/users", methods={"POST"}, name="create_user")
+     * @param ValidatorInterface $validator
+     * @param UserFactory $userFactory
      *
      * @return JsonResponse
      */
@@ -87,6 +90,7 @@ class UserController extends AbstractController
      * @throws ValidatorException      If no user id is supplied
      * @throws CreateNotFoundException      If no user is found with the given id
      * @param string $id
+     * @param UserRepository $repository
      * @return JsonResponse
      */
     public function findByID($id, UserRepository $repository): JsonResponse
