@@ -2,45 +2,110 @@
 
 namespace App\Controller;
 
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Validator\Exception\ValidatorException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Entity\User;
+use App\Repository\UserRepository;
+use App\Factory\UserFactory;
 
-class UserController
+class UserController extends AbstractController
 {
     /**
-     * Finds users based on the given property filters
+     * Finds users based on the given property filters (strict searching)
      *
      * @Route("/users", methods={"GET"}, name="find_users")
-     * @return Response
+     * @return JsonResponse
      */
-    public function find(): Response
+    public function find(UserRepository $repository): JsonResponse
     {
-        return new Response('test');
+        $request = Request::createFromGlobals();
+        $role = $request->query->get('role');
+        $name = $request->query->get('name');
+        
+        $searchParams = [];
+        if ($role) {
+            $searchParams['role'] =  $role;
+        }
+        if ($name) {
+            $searchParams['name'] = $name;
+        }
+        
+        $results = $repository->findBy($searchParams);
+        $users = [];
+        foreach ($results as $user)
+        {
+            $users[] = $user->toArray();
+        }
+
+        return new JsonResponse($users);
     }
 
     /**
-     * Creates a new user and persists it to the noSQL db
+     * Creates a new user and persists it to the db
      *
      * @Route("/users", methods={"POST"}, name="create_user")
      *
-     * @return Response
+     * @return JsonResponse
      */
-    public function create(): Response
+    public function create(ValidatorInterface $validator, UserFactory $userFactory): JsonResponse
     {
-        return new Response('User create being called');
+        $request = Request::createFromGlobals();
+        $name = $request->request->get('name');
+        $role = $request->request->get('role');
+
+        $user = $userFactory::createUser();
+        $user->setRole($role);
+        $user->setName($name);
+
+        $errors = $validator->validate($user);
+        if (count($errors) > 0) {
+            $err = (string) $errors;
+
+            return new JsonResponse([
+                'status' => 'error',
+                'error_msg' => $err
+            ], 400);
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $em->persist($user);
+        $em->flush();
+
+        return new JsonResponse($user->toArray());
     }
 
     /**
      * Finds a user given an id
-     *
      * @Route("/users/{id}", methods={"GET"}, name="find_user_by_id")
+     * @throws ValidatorException      If no user id is supplied
+     * @throws CreateNotFoundException      If no user is found with the given id
      * @param string $id
-     * @return Response
+     * @return JsonResponse
      */
-    public function findByID($id): Response
+    public function findByID($id, UserRepository $repository): JsonResponse
     {
-        return new Response('finding a user with an id of: ' . htmlspecialchars($id));
+        if (!$id) {
+            throw new ValidatorException('A user id must be provided');
+        }
+
+        //$user = $this->getDoctrine()->getRepository(User::class)->find($id);
+        $user = $repository->find($id);
+        if (!$user) {
+            throw $this->createNotFoundException(
+                'No user found for id '. $id
+            );
+        }
+
+        return new JsonResponse([
+            'name' => $user->getName(),
+            'role' => $user->getRole()
+        ]);
     }
 }
-
-?>
