@@ -12,3 +12,5 @@ MySQL v5.7.19<br>
 Framework - Symfony 4<br>
 ORM - Doctrine<br>
 Unit Testing - PHP Unit<br>
+
+API calls tested with Postman
