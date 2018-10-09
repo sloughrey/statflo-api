@@ -14,3 +14,12 @@ ORM - Doctrine<br>
 Unit Testing - PHP Unit<br>
 
 API calls tested with Postman
+
+
+Remember to run these commands in the root folder:
+<ol>
+  <li>Composer Install</li>
+  <li>Update the .env file DATABASE_URL value</li>
+  <li>Run DB migration files: "php bin/console make:migration"</li> 
+  <li>Clear cache: "php bin/console cache:clear"</li>
+</ol>
